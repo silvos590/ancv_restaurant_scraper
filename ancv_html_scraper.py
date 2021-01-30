@@ -3,41 +3,72 @@ from lxml import html
 import requests
 import urllib
 import getopt, sys
-
+import re
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 def restoLookup(city, output):
     address = lambda n,city: f'https://guide.ancv.com/recherche/liste/cv?page={n}&rows=30&f%5B0%5D=im_field_ptl_activite_reference%3A6339&f%5B1%5D=im_field_ptl_activite_reference%3A6344&localisation={city}'
 
     file = open(output,"w")
 
-    print(f'Start...')
+    print('Start...')
     total_resto = 0
     resto_set = set()
-    for i in range(8 + 1):
+
+    # Get the number of pages for the choosen city
+    # tree.xpath doesn't get the span text for an unknown reason, had to use selenium
+    # pager_count = tree.xpath("//div[@id='pager1']/span/text()")
+
+    # Set option to do not open the browser
+    options = Options()
+    options.add_argument('--headless')
+
+    browser = webdriver.Chrome(options=options)
+    browser.get(address(1,city))
+    pager_count = browser.find_elements_by_xpath('.//span[@class="pager-count"]')
+
+    if len(pager_count) == 0:
+        print("Cannot find number of pages")
+        sys.exit()
+
+    # e.g.: '1 - 2'
+    x = re.search("([0-9].*)( - )([0-9].*)", pager_count[0].text)
+    totalpages = x[3]
+    print('Number of pages', totalpages)
+
+    for i in range(int(totalpages)):
         page = requests.get(address(i,city))
-        print(f'page {i} found')
+
+        if(page.status_code != 200):
+            break
+
         tree = html.fromstring(page.content)
-        #filenames = tree.xpath('//a[@class="title"]/attribute::href')
         titles = tree.xpath('//div[@class="field-item even"]/a/h2/text()')
-        #print(titles)
-        for t in zip(titles):
+
+        if len(titles) == 0:
+            break
+        else:
+            print(f'page {i} found')
+
+        for t in titles:
             #t = t.replace('/','_')
             total_resto += 1
-            print(f'Restaurants found n. {total_resto}! {t}') # py3
+            print(f'Restaurants found n. {total_resto}! {t}')
             resto_set.add(t)
 
     sorted_set = sorted(resto_set)
 
+    # Write the list of restaurant in file
     for t in sorted_set:
         str =  ''.join(t)
         file.writelines(str + '\n')
-
 
     print('Done')
     print(f'Resto found: {len(sorted_set)}')
 
 def usage():
-    print('Usage: ./ancv_html_scraper.py -c <city> -o <output-dir>')
+    print('Usage: ./ancv_html_scraper.py -c <city> -o <output-file>')
 
 def main():
     try:
