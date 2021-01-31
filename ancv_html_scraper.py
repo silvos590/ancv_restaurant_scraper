@@ -23,6 +23,8 @@ def restoLookup(city, output):
     # Set option to do not open the browser
     options = Options()
     options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
     browser = webdriver.Chrome(options=options)
     browser.get(address(1,city))
