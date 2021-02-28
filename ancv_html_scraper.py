@@ -4,70 +4,101 @@ import requests
 import urllib
 import getopt, sys
 import re
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-def restoLookup(city, output):
-    address = lambda n,city: f'https://guide.ancv.com/recherche/liste/cv?page={n}&rows=30&f%5B0%5D=im_field_ptl_activite_reference%3A6339&f%5B1%5D=im_field_ptl_activite_reference%3A6344&localisation={city}'
+#old_address = lambda n,city: f'https://guide.ancv.com/recherche/liste/cv?page={n}&rows=30&f%5B0%5D=im_field_ptl_activite_reference%3A6339&f%5B1%5D=im_field_ptl_activite_reference%3A6344&localisation={city}'
+address = lambda city: f'https://leguide.ancv.com/ptl/recherche/list?location={city}&filters%5Bdomaine_activite_principale%5D%5BRestauration%5D=Restauration'
 
-    file = open(output,"w")
+# Write the list of sorted items in file
+def store(set_items, output):
+    if output == None:
+        print('output name is mandatory')
+        exit(1)
+    else:
+        with open(output,"w") as file:
+            for t in set_items:
+                str =  ''.join(t)
+                file.writelines(str + '\n')
 
+def getTotalNumberOfRestaurants(browser, city):
+    # Get the total number of restaurants
+    page = requests.get(address(city))
+    browser.get(address(city))
+    if(page.status_code != 200):
+        print(f'cannot connect to ancv website')
+        sys.exit(1)
+
+    tree = html.fromstring(page.content)
+    total_resto_number = tree.xpath('//*[@id="spanNbResult"]/text()')
+    print(f'Total number of restaurants: {total_resto_number[0]}')
+
+    return int(total_resto_number[0])
+
+def restoLookup(city):
     print('Start...')
     total_resto = 0
     resto_set = set()
 
-    # Get the number of pages for the choosen city
-    # tree.xpath doesn't get the span text for an unknown reason, had to use selenium
-    # pager_count = tree.xpath("//div[@id='pager1']/span/text()")
-
-    # Set option to do not open the browser
+     # Set option to do not open the browser
     options = Options()
     options.add_argument('--headless')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-
     browser = webdriver.Chrome(options=options)
-    browser.get(address(1,city))
-    pager_count = browser.find_elements_by_xpath('.//span[@class="pager-count"]')
 
-    if len(pager_count) == 0:
-        print("Cannot find number of pages")
-        sys.exit()
+    # total restaurants
+    total_resto = getTotalNumberOfRestaurants(browser, city)
 
-    # e.g.: '1 - 2'
-    x = re.search("([0-9].*)( - )([0-9].*)", pager_count[0].text)
-    totalpages = x[3]
-    print('Number of pages', totalpages)
+    # collect all the restaurans name
+    restaurants = []
 
-    for i in range(int(totalpages)):
-        page = requests.get(address(i,city))
+    # with the new version of the site, the list of restaurants is loaded dinamically
+    # when the user scrolls the page, this made their website much more usable.
+    # The infinite scroll can be normally stop when the scrolled more than remain scrollHeight
+    # for some reason in this website thescrollHeight attribute is not updated after each scroll.
+    # The workaround was to stop the loop we found all the restaurants.
+    # I will add a safety timer to avoid infinite loop.
 
-        if(page.status_code != 200):
-            break
+    time.sleep(2)  # Allow 2 seconds for the web page to open
+    scroll_pause_time = 4 # set pause time between scrolls
+    screen_height = browser.execute_script("return window.screen.height;") # get the screen height of the web
+    i = 1
+    
+    while True:
+        # scroll one screen height each time
+        browser.execute_script("window.scrollTo(0, {screen_height}*{i}*10);".format(screen_height=screen_height, i=i))  
+        i += 1
+        time.sleep(scroll_pause_time)
+        # update scroll height each time after scrolled, as the scroll height can change after we scrolled the page
+        #scroll_height = browser.execute_script("return document.body.scrollHeight;")  
 
-        tree = html.fromstring(page.content)
-        titles = tree.xpath('//div[@class="field-item even"]/a/h2/text()')
+        restaurants = browser.find_elements_by_xpath('//*[@id="ptl-list-content"]/div/div/div[2]/p[2]')
 
-        if len(titles) == 0:
-            break
-        else:
-            print(f'page {i} found')
+        print(f'resto found till now: {len(restaurants)}')
+        # Break the loop when the height we need to scroll to is larger than the total scroll height
+        #if (screen_height) * i > scroll_height:
+        # Warning: stopping when we found all the restaturants
+        if len(restaurants) >= total_resto:
+            break 
+    
+    if len(restaurants) == 0:
+        print(f'no restaurant found')
+        return
+    else:
+        print(f'restaurants {len(restaurants)} found')
+    for t in restaurants:
+        #t = t.replace('/','_')
+        print(f'Restaurant name: {t.text}')
+        resto_set.add(t.text)
 
-        for t in titles:
-            #t = t.replace('/','_')
-            total_resto += 1
-            print(f'Restaurants found n. {total_resto}! {t}')
-            resto_set.add(t)
-
+    print('Removing duplicates and sorting the results...')
     sorted_set = sorted(resto_set)
 
-    # Write the list of restaurant in file
-    for t in sorted_set:
-        str =  ''.join(t)
-        file.writelines(str + '\n')
-
     print('Done')
-    print(f'Resto found: {len(sorted_set)}')
+    print(f'Restaurants found: {len(sorted_set)}')
+    return sorted_set
 
 def usage():
     print('Usage: ./ancv_html_scraper.py -c <city> -o <output-file>')
@@ -103,7 +134,9 @@ def main():
     if(output == None):
         output = 'restaurants_cv.txt'
 
-    restoLookup(city, output)
+    restaurants = restoLookup(city)
+
+    store(restaurants, output)
 
 if __name__ == "__main__":
     main()

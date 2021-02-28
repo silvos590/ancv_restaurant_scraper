@@ -1,1 +1,4 @@
 *.txt
+
+# Python
+__pycache__

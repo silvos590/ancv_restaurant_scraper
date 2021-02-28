@@ -1,6 +1,8 @@
 # Launch ancv_restaurant_scraper.py script
 Python script to get the list of restaurants accepting chèques vacances
 
+Update: Since new version of the website the restaurants search is much faster, this scripts could still be useful to get once for all the list for your city.
+
 Usage: ./ancv_html_scraper.py -c city -o output-file
 
 # Dependencies
