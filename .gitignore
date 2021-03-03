@@ -1,4 +1,5 @@
 *.txt
+*.log
 
 # Python
 __pycache__

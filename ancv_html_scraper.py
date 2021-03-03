@@ -2,7 +2,7 @@ from os import makedirs, path
 from lxml import html
 import requests
 import urllib
-import getopt, sys
+import getopt, sys, os
 import re
 import time
 from selenium import webdriver
@@ -26,13 +26,16 @@ def getTotalNumberOfRestaurants(browser, city):
     # Get the total number of restaurants
     page = requests.get(address(city))
     browser.get(address(city))
-    if(page.status_code != 200):
+    if page.status_code != 200:
         print(f'cannot connect to ancv website')
         sys.exit(1)
 
     tree = html.fromstring(page.content)
     total_resto_number = tree.xpath('//*[@id="spanNbResult"]/text()')
-    print(f'Total number of restaurants: {total_resto_number[0]}')
+    if total_resto_number == None or len(total_resto_number) == 0:
+        return 0
+    else:
+        print(f'Total number of restaurants: {total_resto_number[0]}')
 
     return int(total_resto_number[0])
 
@@ -50,11 +53,14 @@ def restoLookup(city):
 
     # total restaurants
     total_resto = getTotalNumberOfRestaurants(browser, city)
+    if total_resto == 0:
+        print(f'no restaurant found')
+        return
 
-    # collect all the restaurans name
+    # collect all the restaurants name
     restaurants = []
 
-    # with the new version of the site, the list of restaurants is loaded dinamically
+    # With the latest version of the site, the list of restaurants is loaded dinamically
     # when the user scrolls the page, this made their website much more usable.
     # The infinite scroll can be normally stop when the scrolled more than remain scrollHeight
     # for some reason in this website thescrollHeight attribute is not updated after each scroll.
@@ -88,6 +94,8 @@ def restoLookup(city):
         return
     else:
         print(f'restaurants {len(restaurants)} found')
+    
+    # Add restaurants to the set
     for t in restaurants:
         #t = t.replace('/','_')
         print(f'Restaurant name: {t.text}')
@@ -105,7 +113,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:v:c:", ["help", "output=","city="])
+        opts, args = getopt.getopt(sys.argv[1:], "ho:v:c:s", ["help", "output=", "city=", "silent-mode"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -114,6 +122,7 @@ def main():
     output = None
     city = None
     verbose = False
+    silent_mode = False
     for o, a in opts:
         if o == "-v":
             verbose = True
@@ -124,14 +133,20 @@ def main():
             output = a
         elif o in ("-c", "--city"):
             city = a
+        elif o in ("-s", "--silent-mode"):
+            silent_mode = True
         else:
             assert False, "unhandled option"
 
-    if(city == None):
+    if silent_mode == True:
+        f = open(os.devnull, 'w')
+        sys.stdout = f
+
+    if city == None :
         print('city is a mandatory parameter')
         exit(1)
 
-    if(output == None):
+    if output == None :
         output = 'restaurants_cv.txt'
 
     restaurants = restoLookup(city)

@@ -25,12 +25,18 @@ chmod +x /usr/bin/chromedriver
   
 # Usage via Docker
 
+A Flask simple webapp have been created. To start it build the docker image and run the container:
+
 ```
-docker build -t ancvrestaurantscraper:latest
-docker run -rm -ti ancvrestaurantscraper:latest "-c <city>"
+docker build -t ancvrestaurantscraper:latest .
+docker run --rm -d ancvrestaurantscraper:latest
+```
+Then connect to this URL to access the webapp:
+```
+http://localhost:5000/
 ```
 
-Then you can access the generated file by accessing the exited container with a bash console
+The script generate also a file, access the exited container with a bash console to have it.
 
 ```
 docker commit `docker ps -q -l` ancvrestaurantscraper_output:latest

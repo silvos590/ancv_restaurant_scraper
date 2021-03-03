@@ -13,6 +13,13 @@ RUN wget --no-verbose -O /tmp/latest_chromedriver_version.txt https://chromedriv
 RUN wget --no-verbose -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/$(cat /tmp/latest_chromedriver_version.txt)/chromedriver_linux64.zip && rm -rf /opt/selenium/chromedriver && unzip /tmp/chromedriver_linux64.zip -d /opt/selenium && rm /tmp/chromedriver_linux64.zip && mv /opt/selenium/chromedriver /opt/selenium/chromedriver-$(cat /tmp/latest_chromedriver_version.txt) && chmod 755 /opt/selenium/chromedriver-$(cat /tmp/latest_chromedriver_version.txt) && ln -fs /opt/selenium/chromedriver-$(cat /tmp/latest_chromedriver_version.txt) /usr/bin/chromedriver
 
 # Add script file
-ADD ancv_html_scraper.py /
+#ADD ancv_html_scraper.py /
 
-ENTRYPOINT ["python3", "./ancv_html_scraper.py"]
+# Add Flask files
+#RUN mkdir static && mkdir templates
+#ADD webapp.py /
+#ADD static/ancv_logo.jpg /static
+COPY . /
+
+ENTRYPOINT ["python3", "webapp.py"]
+#ENTRYPOINT ["python3", "./ancv_html_scraper.py"]

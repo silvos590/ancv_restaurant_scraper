@@ -1,0 +1,5 @@
+*.txt
+test*
+!requirements.txt
+
+__pycache__

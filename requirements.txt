@@ -1,3 +1,4 @@
 selenium
 lxml
 requests
+Flask==1.0.1

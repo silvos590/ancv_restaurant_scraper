@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+   <h3>Eligible restaurants in {{ city }}</h3>
+   <body>
+    {% if result != None %}
+        <table border = 1>
+            {% for key in result %}
+                <tr>
+                <th> {{ key }} </th>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+    <p>Sorry, an error has been encountered</p>
+    {% endif %}
+   </body>
+</html>
