@@ -23,7 +23,7 @@ chown root:root /usr/bin/chromedriver
 chmod +x /usr/bin/chromedriver
 ```
   
-# Usage via Docker
+# Usage as web app via Docker
 
 A Flask simple webapp have been created. To start it build the docker image and run the container:
 
