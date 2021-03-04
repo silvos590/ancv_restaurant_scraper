@@ -36,7 +36,7 @@ Then connect to this URL to access the webapp:
 http://localhost:5000/
 ```
 
-The script generate also a file, access the exited container with a bash console to have it.
+To create a new image (not needed):
 
 ```
 docker commit `docker ps -q -l` ancvrestaurantscraper_output:latest
