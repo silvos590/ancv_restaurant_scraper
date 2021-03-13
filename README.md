@@ -42,3 +42,8 @@ To create a new image (not needed):
 docker commit `docker ps -q -l` ancvrestaurantscraper_output:latest
 docker run -it ancvrestaurantscraper_output:latest /bin/bash
 ```
+
+# Next steps
+
+Move the MongoDB REST in separate container.
+Add unitests

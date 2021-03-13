@@ -96,10 +96,10 @@ def restoLookup(city):
         print(f'restaurants {len(restaurants)} found')
     
     # Add restaurants to the set
-    for t in restaurants:
-        #t = t.replace('/','_')
-        print(f'Restaurant name: {t.text}')
-        resto_set.add(t.text)
+    for r in restaurants:
+        print(f'Restaurant name: {r.text}')
+        t = r.text.replace("\'", "")
+        resto_set.add(t)
 
     print('Removing duplicates and sorting the results...')
     sorted_set = sorted(resto_set)
