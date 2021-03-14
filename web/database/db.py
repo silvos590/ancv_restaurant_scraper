@@ -7,4 +7,4 @@ def initialize_db(app):
 
 # This method i just for development phase
 def drop_db(app):
-    db.connection.drop_database('ancv')
+    db.connection.drop_database('my_db')

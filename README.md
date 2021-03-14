@@ -25,15 +25,27 @@ chmod +x /usr/bin/chromedriver
   
 # Usage as web app via Docker
 
-A Flask simple webapp have been created. To start it build the docker image and run the container:
+A Flask simple webapp have been created. It is composed by 2 docker images, one that runs the webapp and one that manages a mongodb database where all the results are stored.
 
+Build the images and run the containers:
 ```
-docker build -t ancvrestaurantscraper:latest .
-docker run --rm -d ancvrestaurantscraper:latest
+sudo docker-compose build
+sudo docker-compose up
 ```
+
 Then connect to this URL to access the webapp:
 ```
 http://localhost:5000/
+```
+
+# Next steps
+Fix logging on rotating logfile
+Add unitests
+
+# Old procedure with only one container
+```
+docker build -t ancvrestaurantscraper:latest .
+docker run -p 5000:5000 --rm -d ancvrestaurantscraper:latest
 ```
 
 To create a new image (not needed):
@@ -42,8 +54,3 @@ To create a new image (not needed):
 docker commit `docker ps -q -l` ancvrestaurantscraper_output:latest
 docker run -it ancvrestaurantscraper_output:latest /bin/bash
 ```
-
-# Next steps
-
-Move the MongoDB REST in separate container.
-Add unitests

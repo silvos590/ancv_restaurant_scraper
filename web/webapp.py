@@ -5,12 +5,13 @@ from logging.handlers import RotatingFileHandler
 from database.db import initialize_db, drop_db
 from database.models import Restaurants
 import json
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
 # Init mongodb
 app.config['MONGODB_SETTINGS'] = {
-    'host': 'mongodb://localhost/ancv'
+    'host': 'mongodb://my_db:27017'
 }
 initialize_db(app)
 
